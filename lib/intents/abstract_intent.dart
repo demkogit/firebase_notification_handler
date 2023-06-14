@@ -5,7 +5,7 @@ import 'package:firebase_notification_handler/intents/arguments/abstract_intent_
 import 'package:firebase_notification_handler/intents/undefined_intent.dart';
 import 'package:flutter/material.dart';
 
-/// Модель нового экрана из уведомления.
+/// Модель нового экрана из уведомления
 abstract class AbstractIntent {
   final AbstractIntentArguments args;
 
@@ -43,6 +43,6 @@ abstract class AbstractIntent {
     );
   }
 
-  /// Метод, пушит текущий интент.
+  /// Метод, пушит текущий интент
   Future<void> go({BuildContext? context});
 }
