@@ -13,4 +13,5 @@ class OneIntentArguments<T> extends AbstractIntentArguments {
       arg: json[fieldName] as T,
     );
   }
+  
 }
