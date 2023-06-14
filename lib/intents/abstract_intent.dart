@@ -1,42 +1,48 @@
+import 'dart:convert';
 
-// /// Модель нового экрана из уведомления.
-// abstract class AbstractIntent {
-//   final AbstractIntentArguments args;
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_notification_handler/intents/arguments/abstract_intent_arguments.dart';
+import 'package:firebase_notification_handler/intents/undefined_intent.dart';
+import 'package:flutter/material.dart';
 
-//   static AbstractIntent Function(String path, Map<String, dynamic> params)
-//       intentFactory = (_, __) {
-//     return UndefinedIntent();
-//   };
+/// Модель нового экрана из уведомления.
+abstract class AbstractIntent {
+  final AbstractIntentArguments args;
 
-//   AbstractIntent({
-//     required this.args,
-//   });
+  static AbstractIntent Function(String path, Map<String, dynamic> params)
+      intentFactory = (_, __) {
+    return UndefinedIntent();
+  };
 
-//   factory AbstractIntent.fromJson(Map<String, dynamic> map) {
-//     final path = map['path'] as String?;
+  AbstractIntent({
+    required this.args,
+  });
 
-//     if (path == null) {
-//       throw Exception(
-//         'Не передан путь для нового экрана в уведомлении',
-//       );
-//     }
+  factory AbstractIntent.fromJson(Map<String, dynamic> map) {
+    final path = map['path'] as String?;
 
-//     final params =
-//         (map['params'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+    if (path == null) {
+      throw Exception(
+        'Не передан путь для нового экрана в уведомлении',
+      );
+    }
 
-//     return intentFactory(path, params);
-//   }
+    final params =
+        (map['params'] as Map<String, dynamic>?) ?? <String, dynamic>{};
 
-//   static AbstractIntent? fromRemoteMessage(RemoteMessage? message) {
-//     final raw = message?.data['intent'] as String?;
+    return intentFactory(path, params);
+  }
 
-//     if (raw == null) return null;
+  static AbstractIntent? fromRemoteMessage(RemoteMessage? message) {
+    final raw = message?.data['intent'] as String?;
 
-//     return AbstractIntent.fromJson(
-//       jsonDecode(raw) as Map<String, dynamic>,
-//     );
-//   }
+    if (raw == null) return null;
 
-//   /// Метод, пушит текущий интент.
-//   Future<void> go({BuildContext? context});
-// }
+    return AbstractIntent.fromJson(
+      jsonDecode(raw) as Map<String, dynamic>,
+    );
+  }
+
+  /// Метод, пушит текущий интент.
+  Future<void> go({BuildContext? context});
+}
