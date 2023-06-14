@@ -1,10 +1,10 @@
 library firebase_notification_handler;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_notification_handler/intial_remote_message_keeper.dart';
 import 'package:firebase_notification_handler/local_notification_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -76,6 +76,97 @@ abstract class FirebaseNotificationHandler {
     } catch (e) {
       debugPrint('Ошибка: Не удалось получить firebase токен');
     }
+  }
+}
+
+/// Абстрактный класс аргументов для интента (из пуша).
+
+abstract class AbstractIntentArguments {
+  const AbstractIntentArguments();
+}
+
+class EmptyIntentArguments extends AbstractIntentArguments {
+  const EmptyIntentArguments();
+}
+
+/// Модель нового экрана из уведомления.
+abstract class AbstractIntent {
+  final AbstractIntentArguments args;
+
+  static AbstractIntent Function(String path, Map<String, dynamic> params)
+      intentFactory = (_, __) {
+    return UndefinedIntent();
+  };
+
+  AbstractIntent({
+    required this.args,
+  });
+
+  factory AbstractIntent.fromJson(Map<String, dynamic> map) {
+    final path = map['path'] as String?;
+
+    if (path == null) {
+      throw Exception(
+        'Не передан путь для нового экрана в уведомлении',
+      );
+    }
+
+    final params =
+        (map['params'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+
+    return intentFactory(path, params);
+  }
+
+  static AbstractIntent? fromRemoteMessage(RemoteMessage? message) {
+    final raw = message?.data['intent'] as String?;
+
+    if (raw == null) return null;
+
+    return AbstractIntent.fromJson(
+      jsonDecode(raw) as Map<String, dynamic>,
+    );
+  }
+
+  /// Метод, пушит текущий интент.
+  Future<void> go({BuildContext? context});
+}
+
+/// Неопределенный интент.
+class UndefinedIntent extends AbstractIntent {
+  @override
+  EmptyIntentArguments get args => super.args as EmptyIntentArguments;
+
+  UndefinedIntent()
+      : super(
+          args: const EmptyIntentArguments(),
+        );
+
+  @override
+  Future<void> go({BuildContext? context}) async {}
+}
+
+/// Класс, который будет хранить initialMessage,
+/// который можно получить при открытии приложения из пуша
+abstract class InitialRemoteMessageKeeper {
+  static RemoteMessage? get message => _message;
+  static RemoteMessage? _message;
+
+  static void setMessage(RemoteMessage? newMessage) {
+    _message = newMessage;
+  }
+
+  static void removeMessage() {
+    setMessage(null);
+  }
+
+  static AbstractIntent? getInitialIntent({bool withRemove = true}) {
+    final intent = AbstractIntent.fromRemoteMessage(_message);
+
+    if (withRemove) {
+      removeMessage();
+    }
+
+    return intent;
   }
 }
 
